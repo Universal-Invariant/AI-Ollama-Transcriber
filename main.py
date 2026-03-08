@@ -9,6 +9,14 @@ import argparse
 project_root = Path(__file__).parent
 sys.path.append(str(project_root))
 
+# Ensure the user is running a supported Python version (3.8 to 3.11)
+if sys.version_info < (3, 8) or sys.version_info >= (3, 12):
+    print("ERROR: Unsupported Python Version")
+    print(f"You are running Python {sys.version_info.major}.{sys.version_info.minor}.")
+    print("Ollama Transcriber requires Python 3.8, 3.9, 3.10, or 3.11.")
+    print("Please use the correct version or activate your virtual environment.\n")
+    sys.exit(1)
+
 # Import custom modules for audio processing, transcription, and summarization
 from src.utils.config import ConfigManager
 from src.audio.converter import convert_audio

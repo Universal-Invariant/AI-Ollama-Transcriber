@@ -1,6 +1,6 @@
 # Purpose
 
-This project offers a privacy-focused solution for transcribing and summarizing audio recordings through entirely local processing on you. Using OpenAI's Whisper for transcription and local LLMs via Ollama for summarization, it processes audio files (**MP3/WAV**) entirely on your machine, ensuring sensitive content never leaves your environment.
+This project offers a privacy-focused solution for transcribing and summarizing audio recordings through entirely local processing on your machine. Using OpenAI's Whisper for transcription and local LLMs via Ollama for summarization, it processes audio files (**MP3/WAV**) entirely on your machine, ensuring sensitive content never leaves your environment.
 
 The tool automatically generates structured summaries including:
 
@@ -21,6 +21,7 @@ If you are on Windows, you can use the included PowerShell script to automatical
 **Important:** You must run this script directly from the root folder of the cloned repository.
 
 1. Open PowerShell as an **Administrator**.
+
 2. Navigate to your cloned project directory:
 
 ```bash
@@ -35,61 +36,58 @@ powershell.exe -ExecutionPolicy Bypass -File .\install.ps1
 
 The script will automatically check for missing dependencies, set up your Python virtual environment, and verify your GPU access.
 
+> [!IMPORTANT]
+> **Restart Required:** If you have VS Code, Cmder, Command Prompt, or any other terminal open while running the setup script, you **must completely close and restart** those applications (and sometimes reboot your computer) after the installation finishes. 
+> 
+> Otherwise, your terminal will not recognize the newly installed `ffmpeg` command, and audio processing will fail.
 
-## Windows Manual Setup: Direct Install on Your Machine (Windows)
+<details>
+<summary><strong>Windows Manual Setup: Direct Install (Click to expand)</strong></summary>
 
-### Select Python Interpreter Version Between 3.8-3.11
+### Select Python Interpreter Version
 
-- I am using Python 3.10.11
+This project requires a Python version between **3.8 and 3.11** (Python 3.10.11 is recommended). It is highly recommended to set up a virtual environment (`python -m venv venv`) before proceeding.
 
 ### Install `ffmpeg` Globally as PowerShell Administrator
 
-> [!NOTE]
-> `ffmpeg` **DOES NOT** work in virutal environment and is required for Whisper to work. A "**[Win2]File not found error**" is thrown when attempting to use within a virtual environment, although  it is not best practice, utilize your global environment instead.
+`ffmpeg` is required for Whisper to process audio files. Follow the instructions [HERE](https://chocolatey.org/install#individual) to install Chocolatey via PowerShell Administration, then install `ffmpeg`:
 
-- Follow the instructions [HERE](https://chocolatey.org/install#individual) and install choclatey install via PowerShell Administration to install `ffmpeg`.
+```powershell
+choco install ffmpeg
 
-- Install FFmpeg:
-
-  ```PowerShell
-    choco install ffmpeg
-  ```
+```
 
 ### Requirements Installation
 
 ```bash
-python3.10 -m pip install -r requirements.txt --no-warn-script-location
+python -m pip install -r requirements.txt --no-warn-script-location
+
 ```
 
 ### Enable Long Paths
 
-- From PowerShell Administrator run the following:
+From an Administrator PowerShell window, run the following:
 
-```bash
+```powershell
 New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
+
 ```
 
 ### Download PyTorch with CUDA Support for GPU Acceleration
 
-- If you have NVIDIA GPUs, determine what compute platform you have present:
-
+1. If you have an NVIDIA GPU, determine your compute platform by running: `nvidia-smi.exe`
+2. Identify your "CUDA Version".
+3. Navigate to: [https://pytorch.org/get-started/locally/](https://pytorch.org/get-started/locally/)
+4. Select options specific to your environment and run the provided install command.
+5. Once installation is complete, verify your setup:
 ```bash
-nvidia-smi.exe
+python pytorch_verify.py
+
 ```
 
-- Identify "CUDA Version"
-- Navigate to: [https://pytorch.org/get-started/locally/](https://pytorch.org/get-started/locally/)
-- Select options specific to your environment and install the command specified!
-- Once installation is complete run:
 
-```bash
-python3.10 pytorch_verify.py
-```
 
-Example Successfull Output:
-
-- **True**
-- **NVIDIA GeForce RTX 3080 Ti Laptop GPU**
+</details>
 
 ---
 
@@ -97,21 +95,21 @@ Example Successfull Output:
 
 ### LLM Customization
 
-- [Install Ollama on your system](https://ollama.com/download) and select model.
-- Modify the **`config.yaml`** file located in **`src/utils/config.yaml`** and specify the model that you've downloaded.
-- Refer to the [Ollama documentation](https://github.com/ollama/ollama/tree/main/docs) for details on other available options like `num_ctx`, `num_predict`, `top_k`, `repeat_penalty`, and `num_gpu`.
+* [Install Ollama on your system](https://ollama.com/download) and download your preferred model.
+* Modify the **`config.yaml`** file located in **`src/utils/config.yaml`** and specify the model you are using.
+* Refer to the [Ollama documentation](https://github.com/ollama/ollama/tree/main/docs) for details on other available options like `num_ctx`, `num_predict`, `top_k`, `repeat_penalty`, and `num_gpu`.
 
 ```yaml
 llm:
-  model_name: "mistral:latest" # Choose your Ollama model (e.g., "mistral:latest")
-  # ... other options ...
+  model_name: "mistral:latest" # Choose your Ollama model (e.g., "mistral:latest", "llama3.1:8b")
   options:
     temperature: 0.3 # Controls response creativity (0.0-1.0). Higher values are more creative.
     top_p: 0.5 # Controls similarity sampling (accuracy) when generating a response (0.1-1).
-    # ... other options ...
 ```
 
 ### Begin Ollama Server
+
+Before running the transcriber, ensure your local Ollama server is running:
 
 ```bash
 ollama serve
@@ -119,27 +117,30 @@ ollama serve
 
 ### Run Project
 
-To run the project, use the `main.py` script with the following options:
+To run the project, ensure your virtual environment is active, then use the `main.py` script:
 
 ```bash
-python3.10 main.py [OPTIONS]
+python main.py [OPTIONS]
 ```
 
-| Command | Description |
-| --- | --- |
-| `python3.10 main.py --gui` | Use the graphical user interface (GUI) to select an audio file. |
-| `python3.10 main.py --audio path/to/recording.mp3` | Process a specific audio file with default settings. |
-| `python3.10 main.py --audio path/to/recording.mp3 --language es` | Specify the language of the audio file (e.g., Spanish) using ISO codes. |
-| `python3.10 main.py --audio path/to/recording.mp3 --output path/to/output --transcript medium` | Specify the output directory and the Whisper model size for transcription. |
-| `python3.10 main.py --audio path/to/recording.mp3 --llm mistral:latest` | Use a specific LLM model for summarization. |
-| `python3.10 main.py --audio path/to/recording.mp3 --output path/to/summaries --transcript medium --language es --llm mistral:latest` | Full example with all available options. |
-| `python3.10 main.py --help` | For more information on the available options |
+<details>
+<summary><strong>Click here to see all available CLI commands and flags</strong></summary>
 
-The results of the processing will be stored in a `results` directory created in the same location where you run `main.py`. This directory will contain the following subdirectories:
+* `python main.py --gui`: Use the graphical user interface (GUI) to select an audio file.
+* `python main.py --audio path/to/recording.mp3`: Process a specific audio file with default settings.
+* `python main.py --audio path/to/recording.mp3 --language es`: Specify the language of the audio file (e.g., Spanish) using ISO codes.
+* `python main.py --audio path/to/recording.mp3 --output path/to/output --transcript medium`: Specify the output directory and the Whisper model size for transcription.
+* `python main.py --audio path/to/recording.mp3 --llm mistral:latest`: Use a specific LLM model for summarization.
+* `python main.py --audio path/to/recording.mp3 --output path/to/summaries --transcript medium --language es --llm mistral:latest`: Full example utilizing multiple customized flags.
+* `python main.py --help`: Display the help menu with all available options.
+
+</details>
+
+The results of the processing will be stored in a `results` directory created in the same location where you run `main.py`. This directory will contain:
 
 * `converted_audio/`: Stores the audio files converted to the required format (if necessary).
-* `meeting_summaries/`: Contains the generated meeting summary files.
-* `transcribed_text/`: Holds the transcriptions of the audio files.
+* `transcribed_text/`: Holds the raw `.txt` transcriptions of the audio files.
+* `meeting_summaries/`: Contains the generated LLM meeting summary files.
 
 ### Supported Languages
 
@@ -149,7 +150,7 @@ Whisper supports nearly 100 languages. Pass the 2-letter ISO code using the `--l
 <summary><strong>Click here to expand the full list of language codes</strong></summary>
 
 | Code | Language | Code | Language | Code | Language |
-| :--- | :--- | :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- | --- | --- |
 | `en` | English | `es` | Spanish | `fr` | French |
 | `de` | German | `it` | Italian | `pt` | Portuguese |
 | `nl` | Dutch | `ja` | Japanese | `ko` | Korean |
@@ -162,32 +163,24 @@ Whisper supports nearly 100 languages. Pass the 2-letter ISO code using the `--l
 
 ### System Prompt Customization
 
-- Modify the `config.yaml` file located in `src/utils/config.yaml`. You can customize the summarization process by modifying the following sections:
+Modify the `config.yaml` file located in `src/utils/config.yaml` to customize the exact structure and focus of the AI summary:
 
 ```yaml
 prompts:
-  summary_prompt: | # Modify this prompt to customize the summary generation
+  summary_prompt: | 
     Analyze the provided transcript and create a comprehensive Summary Report that captures all essential information.
 
     Structure the summary as follows:
 
     1. **EXECUTIVE OVERVIEW**
     - Synthesize core meeting purpose and outcomes
-    - ... (more details)
 
     2. **KEY DISCUSSION POINTS**
     - Present main topics chronologically with timestamps
-    - ... (more details)
 
     3. **ACTION ITEMS AND RESPONSIBILITIES**
     - List concrete tasks with clear ownership and deliverables
-    - ... (more details)
 
     4. **CONCLUSIONS AND NEXT STEPS**
     - Summarize achieved outcomes against objectives
-    - ... (more details)
-
-    Format Guidelines:
-    - Use clear, professional language ...
-    - ... (more guidelines)
-```
+  ```
